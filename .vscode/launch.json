@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Main",
+            "request": "launch",
+            "mainClass": "com.attendance.Main",
+            "projectName": "SAS",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "vmArgs": ""
+        }
+    ]
+}

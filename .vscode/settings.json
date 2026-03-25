@@ -1,0 +1,17 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar"
+    ],
+    "cSpell.ignoreWords": [
+        "CURDATE",
+        "DCCA",
+        "DCCB",
+        "DCDD",
+        "errorlevel",
+        "javac",
+        "subd",
+        "Colour",
+        "colour",
+        "colours"
+    ]
+}
