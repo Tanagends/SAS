@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run SAS",
+			"type": "shell",
+			"command": "java -jar SAS.jar",
+			"args": [],
+			"isBackground": false,
+			"group": "none",
+			"problemMatcher": []
+		}
+	]
+}

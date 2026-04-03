@@ -211,6 +211,22 @@ public class LoginFrame extends JFrame {
         }
         form.add(hintBox);
 
+        // Sign-up prompt
+        form.add(Box.createVerticalStrut(12));
+        JPanel signUpRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        signUpRow.setOpaque(false);
+        JLabel noAcc = new JLabel("Don't have an account?");
+        noAcc.setFont(UITheme.FONT_SMALL);
+        noAcc.setForeground(UITheme.TEXT_MUTED);
+        JButton signUpBtn = UITheme.makeSecondaryButton("SIGN UP");
+        signUpBtn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        signUpBtn.addActionListener(ev -> showSignUpDialog());
+        signUpRow.add(noAcc);
+        signUpRow.add(Box.createHorizontalStrut(8));
+        signUpRow.add(signUpBtn);
+        form.add(Box.createVerticalStrut(8));
+        form.add(signUpRow);
+
         right.add(form);
 
         // Actions
@@ -274,6 +290,84 @@ public class LoginFrame extends JFrame {
             case "FACULTY" -> new FacultyDashboard(user).setVisible(true);
             case "STUDENT" -> new StudentDashboard(user).setVisible(true);
             default -> JOptionPane.showMessageDialog(null, "Unknown role: " + user.getRole());
+        }
+    }
+
+    private void showSignUpDialog() {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        p.setOpaque(true);
+        p.setBackground(UITheme.CARD_BG);
+        p.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
+
+        JTextField uField = UITheme.styledTextField();
+        uField.setMaximumSize(new Dimension(340, 36));
+        uField.setOpaque(true);
+        uField.setBackground(UITheme.INPUT_BG);
+        uField.setForeground(UITheme.TEXT_PRIMARY);
+
+        JPasswordField pField = UITheme.styledPasswordField();
+        pField.setMaximumSize(new Dimension(340, 36));
+        pField.setOpaque(true);
+        pField.setBackground(UITheme.INPUT_BG);
+        pField.setForeground(UITheme.TEXT_PRIMARY);
+        String[] roles = {"ADMIN", "FACULTY", "STUDENT"};
+        JComboBox<String> roleBox = UITheme.styledComboBoxStr(roles);
+        roleBox.setMaximumSize(new Dimension(340, 30));
+        JTextField emailField = UITheme.styledTextField();
+        emailField.setMaximumSize(new Dimension(340, 36));
+        emailField.setOpaque(true);
+        emailField.setBackground(UITheme.INPUT_BG);
+        emailField.setForeground(UITheme.TEXT_PRIMARY);
+        JTextField phoneField = UITheme.styledTextField();
+        phoneField.setMaximumSize(new Dimension(340, 36));
+        phoneField.setOpaque(true);
+        phoneField.setBackground(UITheme.INPUT_BG);
+        phoneField.setForeground(UITheme.TEXT_PRIMARY);
+
+        p.add(UITheme.makeLabel("Username", UITheme.FONT_SMALL, UITheme.TEXT_PRIMARY));
+        p.add(Box.createVerticalStrut(4));
+        p.add(uField);
+        p.add(Box.createVerticalStrut(8));
+        p.add(UITheme.makeLabel("Password", UITheme.FONT_SMALL, UITheme.TEXT_PRIMARY));
+        p.add(Box.createVerticalStrut(4));
+        p.add(pField);
+        p.add(Box.createVerticalStrut(8));
+        p.add(UITheme.makeLabel("Role", UITheme.FONT_SMALL, UITheme.TEXT_PRIMARY));
+        p.add(Box.createVerticalStrut(4));
+        p.add(roleBox);
+        p.add(Box.createVerticalStrut(8));
+        p.add(UITheme.makeLabel("Email (optional)", UITheme.FONT_SMALL, UITheme.TEXT_PRIMARY));
+        p.add(Box.createVerticalStrut(4));
+        p.add(emailField);
+        p.add(Box.createVerticalStrut(8));
+        p.add(UITheme.makeLabel("Phone (optional)", UITheme.FONT_SMALL, UITheme.TEXT_PRIMARY));
+        p.add(Box.createVerticalStrut(4));
+        p.add(phoneField);
+
+        // Wrap in a scroll pane to ensure sizing on some platforms
+        JScrollPane sp = new JScrollPane(p);
+        sp.setPreferredSize(new Dimension(380, 360));
+        sp.setBorder(BorderFactory.createEmptyBorder());
+        int res = JOptionPane.showConfirmDialog(this, sp, "Create Account", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (res == JOptionPane.OK_OPTION) {
+            String uname = uField.getText().trim();
+            String pwd = new String(pField.getPassword());
+            String role = (String) roleBox.getSelectedItem();
+            String email = emailField.getText().trim();
+            String phone = phoneField.getText().trim();
+
+            if (uname.isEmpty() || pwd.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Username and password are required.", "Validation", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int id = userDAO.createUser(uname, pwd, role, email, phone);
+            if (id > 0) {
+                JOptionPane.showMessageDialog(this, "Account created successfully. You may now sign in.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to create account. It may already exist or there was a connection error.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

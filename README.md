@@ -65,6 +65,30 @@ java -cp "out;lib\mysql-connector-j-8.4.0.jar" com.attendance.Main
 
 If you run from an IDE (Eclipse/IntelliJ/VSCode), add the connector jar as a project/library dependency so it is available at runtime.
 
+## Running locally with SQLite (recommended for demos)
+
+1. Create the local SQLite DB (one-time):
+
+   WSL:
+   cd /root/practice/jav/project/SAS; sqlite3 absents.db < schema-sqlite.sql
+
+   Windows (PowerShell with sqlite3 installed):
+   Set-Location '\\wsl.localhost\Ubuntu\root\practice\jav\project\SAS'; sqlite3 absents.db < schema-sqlite.sql
+
+2. Run the app (ensures driver is on classpath):
+
+   WSL (runs foreground):
+   cd /root/practice/jav/project/SAS; java -cp 'SAS.jar:lib/sqlite-jdbc.jar' com.attendance.Main
+
+   PowerShell (uses WSL to run JVM):
+   .\run_sqlite.ps1
+
+3. Environment variables you can set instead of editing code:
+
+   - SAS_DB_URL — JDBC URL to use (defaults to sqlite file `absents.db`)
+   - SAS_DB_DRIVER — optional JDBC driver class name
+   - SAS_DB_USER / SAS_DB_PASS — used for MySQL connections
+
 ## 🔐 Default Login Credentials
 
 | Role | Username | Password |

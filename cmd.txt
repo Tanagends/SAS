@@ -1,0 +1,1 @@
+wsl -d Ubuntu -- bash -lc "cd /root/practice/jav/project/SAS; export SAS_DB_PASS='admin'; java -jar SAS.jar"
