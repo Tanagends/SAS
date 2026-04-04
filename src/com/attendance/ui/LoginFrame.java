@@ -1,6 +1,8 @@
 package com.attendance.ui;
 
 import com.attendance.dao.UserDAO;
+import com.attendance.dao.StudentDAO;
+import com.attendance.dao.BranchDAO;
 import com.attendance.model.User;
 import com.attendance.util.UITheme;
 
@@ -369,6 +371,18 @@ public class LoginFrame extends JFrame {
 
             int id = userDAO.createUser(uname, pwd, role, email, phone);
             if (id > 0) {
+                // If role is STUDENT, also create a students record with a generated roll
+                if ("STUDENT".equals(role)) {
+                    StudentDAO studentDAO = new StudentDAO();
+                    BranchDAO branchDAO = new BranchDAO();
+                    java.util.List<com.attendance.model.Branch> branches = branchDAO.getAllBranches();
+                    int branchId = branches.isEmpty() ? 1 : branches.get(0).getBranchId();
+                    String roll = "S" + System.currentTimeMillis();
+                    boolean inserted = studentDAO.insertStudent(id, uname, roll, branchId, 1, "A");
+                    if (!inserted) {
+                        JOptionPane.showMessageDialog(this, "Account created but failed to create student profile.", "Warning", JOptionPane.WARNING_MESSAGE);
+                    }
+                }
                 JOptionPane.showMessageDialog(this, "Account created successfully. You may now sign in.", "Success", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to create account. It may already exist or there was a connection error.", "Error", JOptionPane.ERROR_MESSAGE);

@@ -140,6 +140,8 @@ public class ManageStudentsPanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(UITheme.CARD_BG);
+        // Ensure the panel paints its background (avoid transparent regions on some platforms)
+        panel.setOpaque(true);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JLabel rollLbl = UITheme.formLabel("ROLL NO (read-only)");
@@ -219,6 +221,10 @@ public class ManageStudentsPanel extends JPanel {
         panel.add(saveBtn);
 
         dialog.setContentPane(panel);
+        // Make sure the root pane is opaque and has the correct background so the dialog
+        // doesn't show black/transparent areas on some platforms / LAFs.
+        dialog.getRootPane().setBackground(UITheme.CARD_BG);
+        dialog.getRootPane().setOpaque(true);
         dialog.setVisible(true);
     }
 
@@ -240,6 +246,8 @@ public class ManageStudentsPanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(UITheme.CARD_BG);
+        // Ensure background is painted (prevents blacked-out dialog content)
+        panel.setOpaque(true);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
         JLabel header = UITheme.formLabel("RESET PASSWORD FOR: " + name + " (" + rollNo + ")");
@@ -303,6 +311,8 @@ public class ManageStudentsPanel extends JPanel {
         panel.add(resetBtn);
 
         dialog.setContentPane(panel);
+        dialog.getRootPane().setBackground(UITheme.CARD_BG);
+        dialog.getRootPane().setOpaque(true);
         dialog.setVisible(true);
     }
 

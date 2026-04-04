@@ -1,0 +1,11 @@
+Starting SmokeTest...
+Creating user: testuser_1775282067
+createUser returned id: 13
+Using branch id: 2 name=AI & Data Science
+Inserted student: true roll=TS1775282068
+Total students after insert: 7
+Inserted student found in list: true
+Marked attendance: true for TS1775282068 date=2026-04-04
+Total present today: 2
+Login returned user: testuser_1775282067 role=STUDENT
+SmokeTest completed.

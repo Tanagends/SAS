@@ -155,6 +155,8 @@ public class ProfilePanel extends JPanel {
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         p.setBackground(BG_CARD);
+        // Ensure the panel paints its background to avoid transparent/black areas
+        p.setOpaque(true);
         p.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
 
         JLabel h = makeLabel("Change Password", FONT_HEADER, TEXT_PRIMARY);
@@ -194,7 +196,10 @@ public class ProfilePanel extends JPanel {
             } else err.setText("Incorrect current password.");
         });
 
-        dlg.add(p);
+        dlg.setContentPane(p);
+        // Ensure root pane is opaque and uses the same background so the dialog renders correctly
+        dlg.getRootPane().setBackground(BG_CARD);
+        dlg.getRootPane().setOpaque(true);
         dlg.setVisible(true);
     }
 }

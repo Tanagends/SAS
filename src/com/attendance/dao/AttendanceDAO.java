@@ -10,16 +10,31 @@ import java.util.*;
 public class AttendanceDAO {
 
     public boolean markAttendance(String rollNo, String subject, String date, String status) {
-        String sql = "INSERT INTO attendance (student_roll, subject, date, status) VALUES (?,?,?,?) " +
-                "ON DUPLICATE KEY UPDATE status=?";
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, rollNo);
-            ps.setString(2, subject);
-            ps.setString(3, date);
-            ps.setString(4, status);
-            ps.setString(5, status);
-            return ps.executeUpdate() > 0;
+        // Use DB-specific upsert syntax: SQLite uses ON CONFLICT(...) DO UPDATE, MySQL uses ON DUPLICATE KEY UPDATE
+        try (Connection conn = DBConnection.getConnection()) {
+            String product = "";
+            try {
+                product = conn.getMetaData().getDatabaseProductName().toLowerCase();
+            } catch (SQLException ignored) {}
+
+            String sql;
+            boolean isSqlite = product.contains("sqlite");
+            if (isSqlite) {
+                sql = "INSERT INTO attendance (student_roll, subject, date, status) VALUES (?,?,?,?) " +
+                        "ON CONFLICT(student_roll,subject,date) DO UPDATE SET status=excluded.status";
+            } else {
+                sql = "INSERT INTO attendance (student_roll, subject, date, status) VALUES (?,?,?,?) " +
+                        "ON DUPLICATE KEY UPDATE status=?";
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, rollNo);
+                ps.setString(2, subject);
+                ps.setString(3, date);
+                ps.setString(4, status);
+                if (!isSqlite) ps.setString(5, status);
+                return ps.executeUpdate() > 0;
+            }
         } catch (SQLException e) {
             System.err.println("MarkAttendance error: " + e.getMessage());
         }

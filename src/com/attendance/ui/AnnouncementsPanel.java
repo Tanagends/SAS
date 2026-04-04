@@ -154,6 +154,8 @@ public class AnnouncementsPanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(UITheme.CARD_BG);
+        // Force panel to be opaque so its background is painted on all Look & Feels
+        panel.setOpaque(true);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Title field
@@ -217,6 +219,8 @@ public class AnnouncementsPanel extends JPanel {
         panel.add(post);
 
         dialog.setContentPane(panel);
+        dialog.getRootPane().setBackground(UITheme.CARD_BG);
+        dialog.getRootPane().setOpaque(true);
         dialog.setVisible(true);
     }
 }
