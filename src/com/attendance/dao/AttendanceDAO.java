@@ -93,7 +93,8 @@ public class AttendanceDAO {
     }
 
     public int getTotalPresentToday() {
-        String sql = "SELECT COUNT(*) FROM attendance WHERE date=CURDATE() AND status='PRESENT'";
+        // Use SQLite-compatible current date. DATE('now') returns YYYY-MM-DD which matches stored date strings.
+        String sql = "SELECT COUNT(*) FROM attendance WHERE date=DATE('now') AND status='PRESENT'";
         try (Connection conn = DBConnection.getConnection();
                 Statement st = conn.createStatement();
                 ResultSet rs = st.executeQuery(sql)) {

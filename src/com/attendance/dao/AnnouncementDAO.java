@@ -33,7 +33,7 @@ public class AnnouncementDAO {
     }
 
     public boolean addAnnouncement(String title, String message) {
-        String sql = "INSERT INTO announcements (title, message, date_posted) VALUES (?,?,CURDATE())";
+        String sql = "INSERT INTO announcements (title, message, date_posted) VALUES (?,?,CURRENT_DATE)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, title);
