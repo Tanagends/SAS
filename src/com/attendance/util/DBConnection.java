@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    // sensible defaults
     private static final String DEFAULT_SQLITE_URL = "jdbc:sqlite:absents.db?foreign_keys=on";
     private static final String DEFAULT_MYSQL_URL = "jdbc:mysql://localhost:3306/absents_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 
@@ -15,7 +14,10 @@ public class DBConnection {
     // Read password from environment variable SAS_DB_PASS or system property 'db.pass' to avoid hardcoding credentials.
     private static final String PASS = determinePassword();
 
-    private static Connection connection = null;
+    // NOTE: Do NOT cache a single Connection instance. Many DAOs use try-with-resources
+    // and will close the Connection — returning a shared Connection leads to "database
+    // has been closed" / "stmt pointer is closed" errors. Create a new Connection for
+    // each call and let the caller close it.
 
     private static String determineUrl() {
         String env = System.getenv("SAS_DB_URL");
@@ -54,45 +56,36 @@ public class DBConnection {
     }
 
     public static synchronized Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            String driver = determineDriver();
-            try {
-                if (driver != null) {
-                    Class.forName(driver);
-                }
-                // If USER is supplied use the (url,user,pass) form, otherwise use url-only (for sqlite)
-                if (USER != null && !USER.isEmpty() && !URL.startsWith("jdbc:sqlite")) {
-                    connection = DriverManager.getConnection(URL, USER, PASS);
-                } else {
-                    connection = DriverManager.getConnection(URL);
-                }
-            } catch (ClassNotFoundException e) {
-                String msg = "JDBC Driver not found: " + (determineDriver() == null ? "(unknown)" : determineDriver()) + "\n" +
-                        "Please add the appropriate JDBC driver jar to lib/ and include it on the classpath.\n" +
-                        "Examples:\n" +
-                        "  - MySQL: place mysql-connector-j-<version>.jar in lib/\n" +
-                        "  - SQLite: place sqlite-jdbc-<version>.jar (org.xerial) in lib/\n\n" +
-                        "Original error: " + e.getMessage();
-                try {
-                    javax.swing.JOptionPane.showMessageDialog(null, msg, "JDBC Driver Missing",
-                            javax.swing.JOptionPane.ERROR_MESSAGE);
-                } catch (Throwable t) {
-                    // ignore UI errors when running in headless environments
-                }
-                throw new SQLException(msg, e);
+        String driver = determineDriver();
+        try {
+            if (driver != null) {
+                Class.forName(driver);
             }
+            // Always create a fresh connection for the caller.
+            if (USER != null && !USER.isEmpty() && !URL.startsWith("jdbc:sqlite")) {
+                return DriverManager.getConnection(URL, USER, PASS);
+            } else {
+                return DriverManager.getConnection(URL);
+            }
+        } catch (ClassNotFoundException e) {
+            String msg = "JDBC Driver not found: " + (determineDriver() == null ? "(unknown)" : determineDriver()) + "\n" +
+                    "Please add the appropriate JDBC driver jar to lib/ and include it on the classpath.\n" +
+                    "Examples:\n" +
+                    "  - MySQL: place mysql-connector-j-<version>.jar in lib/\n" +
+                    "  - SQLite: place sqlite-jdbc-<version>.jar (org.xerial) in lib/\n\n" +
+                    "Original error: " + e.getMessage();
+            try {
+                javax.swing.JOptionPane.showMessageDialog(null, msg, "JDBC Driver Missing",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+            } catch (Throwable t) {
+                // ignore UI errors when running in headless environments
+            }
+            throw new SQLException(msg, e);
         }
-        return connection;
     }
 
+    // Keep a no-op close helper to avoid breaking callers; actual connections are closed by callers.
     public static void closeConnection() {
-        if (connection != null) {
-            try {
-                connection.close();
-                connection = null;
-            } catch (SQLException e) {
-                System.err.println("Error closing connection: " + e.getMessage());
-            }
-        }
+        // no-op because connections are not cached
     }
 }

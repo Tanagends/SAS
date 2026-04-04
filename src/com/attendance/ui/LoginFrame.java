@@ -118,7 +118,7 @@ public class LoginFrame extends JFrame {
                 g2.dispose();
             }
         };
-        right.setOpaque(false);
+        right.setOpaque(true); // Ensure background painting for right panel to avoid black artifacts
 
         JPanel form = new JPanel();
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
@@ -349,7 +349,12 @@ public class LoginFrame extends JFrame {
         JScrollPane sp = new JScrollPane(p);
         sp.setPreferredSize(new Dimension(380, 360));
         sp.setBorder(BorderFactory.createEmptyBorder());
-        int res = JOptionPane.showConfirmDialog(this, sp, "Create Account", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        // Ensure viewport paints the panel background (fixes dark/black rendering on some LAFs)
+        sp.getViewport().setOpaque(true);
+        sp.getViewport().setBackground(UITheme.CARD_BG);
+        sp.setBackground(UITheme.CARD_BG);
+        // Show dialog as a standalone dialog (not attached to the main frame) to avoid glass-pane dimming artifacts
+        int res = JOptionPane.showConfirmDialog(null, sp, "Create Account", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
             String uname = uField.getText().trim();
             String pwd = new String(pField.getPassword());

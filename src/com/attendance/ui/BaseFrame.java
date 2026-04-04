@@ -34,12 +34,16 @@ public abstract class BaseFrame extends JFrame {
         // Main area
         JPanel mainArea = new JPanel(new BorderLayout());
         mainArea.setBackground(UITheme.PRIMARY_DARK);
+        // Ensure main area is opaque so child dialogs and overlays render correctly
+        mainArea.setOpaque(true);
 
         sidebarPanel = buildSidebar();
         mainArea.add(sidebarPanel, BorderLayout.WEST);
 
         contentArea = new JPanel(new BorderLayout());
         contentArea.setBackground(UITheme.PRIMARY_DARK);
+        // Make contentArea opaque to avoid underlying black showing through when dialogs/popups appear
+        contentArea.setOpaque(true);
         contentArea.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         mainArea.add(contentArea, BorderLayout.CENTER);
 
