@@ -198,12 +198,32 @@ public class AnnouncementsPanel extends JPanel {
                 errLbl.setText("Title and message are required.");
                 return;
             }
-            if (announcementDAO.addAnnouncement(t, m)) {
-                dialog.dispose();
-                loadAnnouncements();
-            } else {
-                errLbl.setText("Failed to post announcement. Check DB connection.");
-            }
+            post.setEnabled(false);
+            errLbl.setText("Posting...");
+            SwingWorker<Boolean, Void> w = new SwingWorker<>() {
+                @Override
+                protected Boolean doInBackground() {
+                    return announcementDAO.addAnnouncement(t, m);
+                }
+
+                @Override
+                protected void done() {
+                    post.setEnabled(true);
+                    try {
+                        boolean ok = get();
+                        if (ok) {
+                            dialog.dispose();
+                            loadAnnouncements();
+                        } else {
+                            errLbl.setText("Failed to post announcement. Check DB connection.");
+                        }
+                    } catch (Exception ex) {
+                        errLbl.setText("Error occurred. See console.");
+                        ex.printStackTrace();
+                    }
+                }
+            };
+            w.execute();
         });
 
         panel.add(titleLbl);

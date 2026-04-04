@@ -21,6 +21,7 @@ public class AddStudentPanel extends JPanel {
     private JComboBox<Integer> yearCombo;
     private JTextField sectionField;
     private JLabel statusLabel;
+    private JButton submitBtn;
 
     public AddStudentPanel() {
         setBackground(UITheme.PRIMARY_DARK);
@@ -68,10 +69,10 @@ public class AddStudentPanel extends JPanel {
         add(statusLabel);
         add(Box.createVerticalStrut(10));
 
-        JButton submit = UITheme.primaryButton("Add Student");
-        submit.setAlignmentX(LEFT_ALIGNMENT);
-        submit.addActionListener(e -> handleAdd());
-        add(submit);
+        submitBtn = UITheme.primaryButton("Add Student");
+        submitBtn.setAlignmentX(LEFT_ALIGNMENT);
+        submitBtn.addActionListener(e -> handleAdd());
+        add(submitBtn);
 
         populateBranches();
     }
@@ -102,28 +103,51 @@ public class AddStudentPanel extends JPanel {
             return;
         }
 
-        // username = roll, default password
-        String username = roll;
-        String password = "pass123"; // default password for new students
-        int userId = userDAO.createUser(username, password, "STUDENT", "", "");
-        if (userId < 0) {
-            statusLabel.setText("Failed to create user account.");
-            return;
-        }
+        // Run DB operations off the EDT
+        submitBtn.setEnabled(false);
+        statusLabel.setText("Adding student...");
+        SwingWorker<Boolean, Void> w = new SwingWorker<>() {
+            private String username;
+            private String password;
+            @Override
+            protected Boolean doInBackground() {
+                try {
+                    // username = roll, default password
+                    username = roll;
+                    password = "pass123";
+                    int userId = userDAO.createUser(username, password, "STUDENT", "", "");
+                    if (userId < 0) return false;
+                    return studentDAO.insertStudent(userId, name, roll, branch.getBranchId(), year, section);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    return false;
+                }
+            }
 
-        boolean ok = studentDAO.insertStudent(userId, name, roll, branch.getBranchId(), year, section);
-        if (ok) {
-            JOptionPane.showMessageDialog(this,
-                    "Student added successfully. Default login: " + username + " / " + password);
-            // clear fields
-            rollField.setText("");
-            nameField.setText("");
-            sectionField.setText("");
-            yearCombo.setSelectedIndex(0);
-            if (branchCombo.getItemCount() > 0)
-                branchCombo.setSelectedIndex(0);
-        } else {
-            statusLabel.setText("Failed to insert student record.");
-        }
+            @Override
+            protected void done() {
+                submitBtn.setEnabled(true);
+                try {
+                    boolean ok = get();
+                    if (ok) {
+                        statusLabel.setText(" ");
+                        JOptionPane.showMessageDialog(AddStudentPanel.this,
+                                "Student added successfully. Default login: " + username + " / " + password);
+                        // clear fields
+                        rollField.setText("");
+                        nameField.setText("");
+                        sectionField.setText("");
+                        yearCombo.setSelectedIndex(0);
+                        if (branchCombo.getItemCount() > 0)
+                            branchCombo.setSelectedIndex(0);
+                    } else {
+                        statusLabel.setText("Failed to add student. Check logs.");
+                    }
+                } catch (Exception ex) {
+                    statusLabel.setText("Error occurred. See console.");
+                }
+            }
+        };
+        w.execute();
     }
 }

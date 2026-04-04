@@ -190,14 +190,34 @@ public class ManageStudentsPanel extends JPanel {
                 errLbl.setText("All fields are required.");
                 return;
             }
-            if (studentDAO.updateStudent(rollNo, newName, newYear, newSection)) {
-                JOptionPane.showMessageDialog(dialog, "Student updated successfully.", "Success",
-                        JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-                loadStudents();
-            } else {
-                errLbl.setText("Update failed. Check DB connection.");
-            }
+            saveBtn.setEnabled(false);
+            errLbl.setText("Saving...");
+            SwingWorker<Boolean, Void> w = new SwingWorker<>() {
+                @Override
+                protected Boolean doInBackground() {
+                    return studentDAO.updateStudent(rollNo, newName, newYear, newSection);
+                }
+
+                @Override
+                protected void done() {
+                    saveBtn.setEnabled(true);
+                    try {
+                        boolean ok = get();
+                        if (ok) {
+                            JOptionPane.showMessageDialog(dialog, "Student updated successfully.", "Success",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            dialog.dispose();
+                            loadStudents();
+                        } else {
+                            errLbl.setText("Update failed. Check DB connection.");
+                        }
+                    } catch (Exception ex) {
+                        errLbl.setText("Error occurred. See console.");
+                        ex.printStackTrace();
+                    }
+                }
+            };
+            w.execute();
         });
 
         panel.add(rollLbl);
@@ -287,13 +307,33 @@ public class ManageStudentsPanel extends JPanel {
                 errLbl.setText("Passwords do not match.");
                 return;
             }
-            if (studentDAO.resetStudentPassword(rollNo, np)) {
-                JOptionPane.showMessageDialog(dialog, "Password reset successful!\nNew password: " + np, "Success",
-                        JOptionPane.INFORMATION_MESSAGE);
-                dialog.dispose();
-            } else {
-                errLbl.setText("Reset failed. Check DB connection.");
-            }
+            resetBtn.setEnabled(false);
+            errLbl.setText("Resetting...");
+            SwingWorker<Boolean, Void> w = new SwingWorker<>() {
+                @Override
+                protected Boolean doInBackground() {
+                    return studentDAO.resetStudentPassword(rollNo, np);
+                }
+
+                @Override
+                protected void done() {
+                    resetBtn.setEnabled(true);
+                    try {
+                        boolean ok = get();
+                        if (ok) {
+                            JOptionPane.showMessageDialog(dialog, "Password reset successful!\nNew password: " + np, "Success",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            dialog.dispose();
+                        } else {
+                            errLbl.setText("Reset failed. Check DB connection.");
+                        }
+                    } catch (Exception ex) {
+                        errLbl.setText("Error occurred. See console.");
+                        ex.printStackTrace();
+                    }
+                }
+            };
+            w.execute();
         });
 
         panel.add(header);
@@ -329,13 +369,31 @@ public class ManageStudentsPanel extends JPanel {
                 "Delete student: " + name + " (" + rollNo + ")?\nThis will also delete their attendance and marks.",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (confirm == JOptionPane.YES_OPTION) {
-            if (studentDAO.deleteStudent(rollNo)) {
-                JOptionPane.showMessageDialog(this, "Student deleted successfully.", "Deleted",
-                        JOptionPane.INFORMATION_MESSAGE);
-                loadStudents();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to delete student.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-}
+            // perform deletion off the EDT
+            SwingWorker<Boolean, Void> w = new SwingWorker<>() {
+                @Override
+                protected Boolean doInBackground() {
+                    return studentDAO.deleteStudent(rollNo);
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        boolean ok = get();
+                        if (ok) {
+                            JOptionPane.showMessageDialog(ManageStudentsPanel.this, "Student deleted successfully.", "Deleted",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            loadStudents();
+                        } else {
+                            JOptionPane.showMessageDialog(ManageStudentsPanel.this, "Failed to delete student.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(ManageStudentsPanel.this, "Error occurred. See console.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            w.execute();
+         }
+     }
+ }

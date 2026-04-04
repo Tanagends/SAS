@@ -177,12 +177,27 @@ public class FacultyDashboard extends BaseFrame {
 
         loadBtn.addActionListener(e -> {
             String section = (String) sectionCombo.getSelectedItem();
-            List<Student> students = section != null ? studentDAO.getStudentsBySection(section)
-                    : studentDAO.getAllStudents();
-            marksModel.setRowCount(0);
-            for (Student s : students) {
-                marksModel.addRow(new Object[] { s.getRollNo(), s.getStudentName(), "0", "" });
-            }
+            loadBtn.setEnabled(false);
+            SwingWorker<List<Student>, Void> lw = new SwingWorker<>() {
+                @Override
+                protected List<Student> doInBackground() {
+                    return section != null ? studentDAO.getStudentsBySection(section) : studentDAO.getAllStudents();
+                }
+                @Override
+                protected void done() {
+                    loadBtn.setEnabled(true);
+                    try {
+                        List<Student> students = get();
+                        marksModel.setRowCount(0);
+                        for (Student s : students) {
+                            marksModel.addRow(new Object[] { s.getRollNo(), s.getStudentName(), "0", "" });
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(panel, "Error loading students: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            lw.execute();
         });
 
         JButton saveBtn = UITheme.successButton("Save All Marks");

@@ -300,18 +300,46 @@ public class EditAttendancePanel extends JPanel {
         Date d = (Date) dateSpinner.getValue();
         String date = new SimpleDateFormat("yyyy-MM-dd").format(d);
 
-        int saved = 0;
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String roll = (String) tableModel.getValueAt(i, 0);
-            String status = (String) tableModel.getValueAt(i, 2);
-            if (status == null || status.isBlank())
-                continue;
-            if (attendanceDAO.markAttendance(roll, subject.getSubjectName(), date, status))
-                saved++;
-        }
-        JOptionPane.showMessageDialog(this,
-                "✅ Updated " + saved + " / " + tableModel.getRowCount() + " records.",
-                "Saved", JOptionPane.INFORMATION_MESSAGE);
+        // Run save operation off the EDT
+        JDialog progress = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Saving...", true);
+        progress.setSize(300, 80);
+        progress.setLocationRelativeTo(this);
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        p.add(new JLabel("Saving attendance records...", SwingConstants.CENTER), BorderLayout.CENTER);
+        progress.setContentPane(p);
+
+        SwingWorker<Integer, Void> w = new SwingWorker<>() {
+            @Override
+            protected Integer doInBackground() {
+                int saved = 0;
+                for (int i = 0; i < tableModel.getRowCount(); i++) {
+                    String roll = (String) tableModel.getValueAt(i, 0);
+                    String status = (String) tableModel.getValueAt(i, 2);
+                    if (status == null || status.isBlank())
+                        continue;
+                    if (attendanceDAO.markAttendance(roll, subject.getSubjectName(), date, status))
+                        saved++;
+                }
+                return saved;
+            }
+
+            @Override
+            protected void done() {
+                progress.dispose();
+                try {
+                    int saved = get();
+                    JOptionPane.showMessageDialog(EditAttendancePanel.this,
+                            "✅ Updated " + saved + " / " + tableModel.getRowCount() + " records.",
+                            "Saved", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(EditAttendancePanel.this,
+                            "Error saving records: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        w.execute();
+        progress.setVisible(true);
     }
 
     private void refreshCounter() {

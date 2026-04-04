@@ -154,7 +154,8 @@ public class StudentDAO {
     /** Resets a student's login password (SHA-256 hashed). */
     public boolean resetStudentPassword(String rollNo, String newPassword) {
         String hashedPw = com.attendance.util.PasswordUtil.hashPassword(newPassword);
-        String sql = "UPDATE users u JOIN students s ON u.user_id=s.user_id SET u.password=? WHERE s.roll_no=?";
+        // Use a subquery to be compatible with SQLite (which doesn't support JOIN in UPDATE)
+        String sql = "UPDATE users SET password=? WHERE user_id=(SELECT user_id FROM students WHERE roll_no=?)";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, hashedPw);

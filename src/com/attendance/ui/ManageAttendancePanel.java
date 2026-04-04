@@ -29,6 +29,8 @@ public class ManageAttendancePanel extends JPanel {
     private JComboBox<Subject> subjectCombo;
     private JComboBox<String> sectionCombo;
     private JSpinner dateSpinner;
+    private JButton loadBtn;
+    private JButton submitBtn;
 
     // Table model columns: Present(checkbox), RollNo, Name, Status(String)
     private DefaultTableModel tableModel;
@@ -88,7 +90,7 @@ public class ManageAttendancePanel extends JPanel {
         dateSpinner.setBackground(UITheme.INPUT_BG);
         dateSpinner.setForeground(UITheme.TEXT_PRIMARY);
 
-        JButton loadBtn = UITheme.primaryButton("⟳  Load Students");
+        loadBtn = UITheme.primaryButton("⟳  Load Students");
 
         row1.add(UITheme.formLabel("Subject:"));
         row1.add(subjectCombo);
@@ -249,7 +251,7 @@ public class ManageAttendancePanel extends JPanel {
         tableCard.add(UITheme.styledScrollPane(table), BorderLayout.CENTER);
 
         // Submit button at bottom of table card
-        JButton submitBtn = buildSubmitButton();
+        submitBtn = buildSubmitButton();
         tableCard.add(submitBtn, BorderLayout.SOUTH);
 
         // ── Wire up actions ────────────────────────────────────────────────────
@@ -344,24 +346,43 @@ public class ManageAttendancePanel extends JPanel {
     // ─────────────────────────────────────────────────────────────────────────
     private void loadStudents() {
         String section = (String) sectionCombo.getSelectedItem();
-        if (section == null || section.equals("All Sections")) {
-            currentStudents = studentDAO.getAllStudents();
-        } else {
-            currentStudents = studentDAO.getStudentsBySection(section);
-        }
+        loadBtn.setEnabled(false);
+        submitBtn.setEnabled(false);
+        SwingWorker<java.util.List<Student>, Void> w = new SwingWorker<>() {
+            @Override
+            protected java.util.List<Student> doInBackground() {
+                if (section == null || section.equals("All Sections")) {
+                    return studentDAO.getAllStudents();
+                } else {
+                    return studentDAO.getStudentsBySection(section);
+                }
+            }
 
-        tableModel.setRowCount(0);
-        for (Student s : currentStudents) {
-            // Default: checkbox ticked (PRESENT), Status = "PRESENT"
-            tableModel.addRow(new Object[] { true, s.getRollNo(), s.getStudentName(), "PRESENT" });
-        }
-
-        if (currentStudents.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "No students found for selected section.", "Info",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-        refreshCounter();
+            @Override
+            protected void done() {
+                loadBtn.setEnabled(true);
+                submitBtn.setEnabled(true);
+                try {
+                    currentStudents = get();
+                    tableModel.setRowCount(0);
+                    for (Student s : currentStudents) {
+                        tableModel.addRow(new Object[] { true, s.getRollNo(), s.getStudentName(), "PRESENT" });
+                    }
+                    if (currentStudents.isEmpty()) {
+                        JOptionPane.showMessageDialog(ManageAttendancePanel.this,
+                                "No students found for selected section.", "Info",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    refreshCounter();
+                } catch (Exception ex) {
+                    loadBtn.setEnabled(true);
+                    submitBtn.setEnabled(true);
+                    JOptionPane.showMessageDialog(ManageAttendancePanel.this,
+                            "Error loading students: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        w.execute();
     }
 
     private void setAllStatus(String status) {
@@ -412,39 +433,57 @@ public class ManageAttendancePanel extends JPanel {
         Date selectedDate = (Date) dateSpinner.getValue();
         String date = new SimpleDateFormat("yyyy-MM-dd").format(selectedDate);
 
-        int saved = 0;
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String roll = (String) tableModel.getValueAt(i, 1);
-            String status = (String) tableModel.getValueAt(i, 3);
-            if (status == null || status.isBlank())
-                status = "PRESENT";
-            if (attendanceDAO.markAttendance(roll, subject.getSubjectName(), date, status))
-                saved++;
-        }
+        submitBtn.setEnabled(false);
+        SwingWorker<Integer, Void> w = new SwingWorker<>() {
+            @Override
+            protected Integer doInBackground() {
+                int saved = 0;
+                for (int i = 0; i < tableModel.getRowCount(); i++) {
+                    String roll = (String) tableModel.getValueAt(i, 1);
+                    String status = (String) tableModel.getValueAt(i, 3);
+                    if (status == null || status.isBlank())
+                        status = "PRESENT";
+                    if (attendanceDAO.markAttendance(roll, subject.getSubjectName(), date, status))
+                        saved++;
+                }
+                return saved;
+            }
 
-        // Summary
-        long present = 0, absent = 0, late = 0;
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String s = (String) tableModel.getValueAt(i, 3);
-            if ("PRESENT".equals(s))
-                present++;
-            else if ("ABSENT".equals(s))
-                absent++;
-            else if ("LATE".equals(s))
-                late++;
-        }
+            @Override
+            protected void done() {
+                submitBtn.setEnabled(true);
+                try {
+                    int saved = get();
+                    // Summary
+                    long present = 0, absent = 0, late = 0;
+                    for (int i = 0; i < tableModel.getRowCount(); i++) {
+                        String s = (String) tableModel.getValueAt(i, 3);
+                        if ("PRESENT".equals(s))
+                            present++;
+                        else if ("ABSENT".equals(s))
+                            absent++;
+                        else if ("LATE".equals(s))
+                            late++;
+                    }
 
-        JOptionPane.showMessageDialog(this,
-                String.format("""
-                        ✅ Attendance submitted for %s on %s
-
-                           Present : %d
-                           Absent  : %d
-                           Late    : %d
-                           Total   : %d  (saved: %d)
-                        """,
-                        subject.getSubjectName(), date,
-                        present, absent, late, tableModel.getRowCount(), saved),
-                "Attendance Submitted", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(ManageAttendancePanel.this,
+                            String.format("""
+                                    ✅ Attendance submitted for %s on %s
++
++                                       Present : %d
++                                       Absent  : %d
++                                       Late    : %d
++                                       Total   : %d  (saved: %d)
++                                    """,
++                                    subject.getSubjectName(), date,
++                                    present, absent, late, tableModel.getRowCount(), saved),
++                            "Attendance Submitted", JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(ManageAttendancePanel.this,
+                            "Error saving attendance: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        w.execute();
     }
 }
