@@ -267,6 +267,19 @@ public class ManageStudentsPanel extends JPanel {
         if (dialog.getContentPane() instanceof JComponent cp) {
             cp.setOpaque(true);
         }
+
+        // Ensure proper first paint (prevents occasional black dialog content)
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowOpened(java.awt.event.WindowEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    dialog.getContentPane().revalidate();
+                    dialog.getContentPane().repaint();
+                    dialog.repaint();
+                });
+            }
+        });
+
         dialog.setVisible(true);
     }
 

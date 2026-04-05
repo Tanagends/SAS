@@ -1,155 +1,263 @@
-# 🎓 Student Attendance System (SAS)
+# Student Attendance System (SAS)
 
-A full-featured, professional Java Swing desktop application for tracking student attendance, managing marks, and generating reports.
+A presentation-ready **Java Swing desktop application** for managing student attendance, marks, announcements, and role-based dashboards.
 
+This repository is set up to run quickly with **SQLite (recommended for demos)** and can also be configured to use **MySQL**.
 
-| Task | Issue | Status |
-|------|-------|--------|
-| Task 1 | Announcements DB schema mismatch (`date_posted` vs `created_at`) | ✅ Fixed |
-| Task 2 | ProfilePanel hardcoded data & non-functional Edit button | ✅ Fixed |
-| Task 3 | ReportsPanel mock data & non-functional Refresh button | ✅ Fixed |
-| Task 4 | BranchDAO missing `getAllBranches()` | ✅ Fixed |
-| Task 5 | SubjectDAO missing `getAllSubjects()` | ✅ Fixed |
-| Task 6 | FacultyDAO missing `getAllFaculty()` | ✅ Fixed |
-| Task 7 | AddStudentPanel: text field for branch + no duplicate roll validation | ✅ Fixed |
-| Task 8 | FacultyDashboard: hardcoded subjects in Mark Attendance | ✅ Fixed |
-| Task 9 | FacultyDashboard: hardcoded subjects & section "A" only in Enter Marks | ✅ Fixed |
-| Task 10 | ManageAttendancePanel: hardcoded subjects | ✅ Fixed |
-| Task 11 | StudentDAO mock data in `getStudentsBySection()` | ✅ Fixed |
-| Task 12 | UserDAO plain-text passwords & hardcoded credentials | ✅ Fixed (SHA-256) |
-| Task 13 | AttendanceDAO mock data for roll "101" | ✅ Fixed |
-| Task 14 | StudentDAO `getRollNumberByUsername()` returns "101" fallback | ✅ Fixed |
+---
 
-## 🚀 Setup Instructions
+## Highlights
 
-### 1. Prerequisites
-- **JDK 11 or later** — [Download](https://adoptium.net)
-- **MySQL 8.x** — Running on localhost:3306
-- **MySQL Connector/J** — Already included in `lib/`
+- **Role-based dashboards**: Admin / Faculty / Student
+- **Attendance workflow**: mark (or edit) attendance by subject + date
+- **Reports**: per-student attendance summary and student lists
+- **Marks entry**: enter marks by subject/section + exam type
+- **Announcements**: publish/view announcements (role-aware)
+- **Polished UI**: modern dark theme, consistent components
+- **Security**: SHA-256 password hashing + prepared statements
+- **Demo-friendly packaging**: runnable fat JAR including JDBC drivers
 
-### 2. Database Setup
-```sql
--- Run database.sql in MySQL Workbench or phpMyAdmin
-mysql -u root -p < database.sql
-```
+---
 
-### 3. Configure DB Password
-Edit `src/com/attendance/util/DBConnection.java`:
-```java
-private static final String PASS = ""; // Enter your MySQL root password here
-```
+## Quick Start (Recommended: Standalone JAR + SQLite)
 
-### 4. Build & Run
-```bash
-chmod +x build.sh run.sh
-./build.sh   # Compiles and creates SAS.jar
-./run.sh     # Runs the application
-```
+### Prerequisites
 
-Or manually:
-```bash
-javac -cp "lib/mysql-connector-j-8.4.0.jar" -d bin $(find src -name "*.java")
-jar cfm SAS.jar manifest.txt -C bin .
-java -jar SAS.jar
-```
+- **Java (JRE/JDK) 11+** (Java 17 works best)
+- No database server required (SQLite file DB is included/created locally)
 
-### Troubleshooting
+### 1) Build the standalone JAR
 
-- If you see a runtime error "MySQL JDBC Driver not found" or build messages mentioning the connector jar, verify that `lib/mysql-connector-j-8.4.0.jar` exists and is not corrupted. If it is missing or corrupted, download the Connector/J from https://dev.mysql.com/downloads/connector/j/ and place the JAR in the `lib/` folder.
-- When running from the command line make sure to include the connector on the classpath, for example:
+From **WSL / Linux**:
 
-```cmd
-java -cp "out;lib\mysql-connector-j-8.4.0.jar" com.attendance.Main
-```
+- `./build-standalone.sh`
 
-If you run from an IDE (Eclipse/IntelliJ/VSCode), add the connector jar as a project/library dependency so it is available at runtime.
+From **Windows PowerShell (building via WSL)**:
 
-## Running locally with SQLite (recommended for demos)
+- `wsl -d Ubuntu --cd /root/practice/jav/project/SAS -- bash -lc "./build-standalone.sh"`
 
-1. Create the local SQLite DB (one-time):
+This produces:
 
-   WSL:
-   cd /root/practice/jav/project/SAS; sqlite3 absents.db < schema-sqlite.sql
+- `SAS-standalone.jar`
 
-   Windows (PowerShell with sqlite3 installed):
-   Set-Location '\\wsl.localhost\Ubuntu\root\practice\jav\project\SAS'; sqlite3 absents.db < schema-sqlite.sql
+### 2) Run
 
-2. Run the app (ensures driver is on classpath):
+- `java -jar SAS-standalone.jar`
 
-   WSL (runs foreground):
-   cd /root/practice/jav/project/SAS; java -cp 'SAS.jar:lib/sqlite-jdbc.jar' com.attendance.Main
+If you are running from Windows but want to execute via WSL:
 
-   PowerShell (uses WSL to run JVM):
-   .\run_sqlite.ps1
+- `wsl -d Ubuntu --cd /root/practice/jav/project/SAS -- java -jar SAS-standalone.jar`
 
-3. Environment variables you can set instead of editing code:
+---
 
-   - SAS_DB_URL — JDBC URL to use (defaults to sqlite file `absents.db`)
-   - SAS_DB_DRIVER — optional JDBC driver class name
-   - SAS_DB_USER / SAS_DB_PASS — used for MySQL connections
+## SQLite Demo Database
 
-## 🔐 Default Login Credentials
+The app defaults to SQLite and uses the file:
+
+- `absents.db`
+
+### Create/reset the SQLite DB (one-time)
+
+From WSL:
+
+- `sqlite3 absents.db < schema-sqlite.sql`
+
+If you already have `absents.db` and want a clean demo DB:
+
+- delete `absents.db` and rerun the command above.
+
+---
+
+## Default Credentials (if seeded)
+
+Credentials depend on what is present in your DB file.
+
+If your database is seeded with demo users, typical accounts are:
 
 | Role | Username | Password |
 |------|----------|----------|
 | Admin | `admin` | `admin123` |
 | Faculty | `faculty1` | `faculty123` |
 | Student | `student1` | `pass123` |
-| Student | `student2` | `pass123` |
 
-## 🏗️ Project Structure
+If these are not present, create a new account using **Sign Up**.
+
+> Tip: If “role routing” looks wrong after signup/login, verify the `users.role` value is exactly `ADMIN`, `FACULTY`, or `STUDENT`.
+
+---
+
+## What Each Role Can Do
+
+### Admin
+
+- Manage Students / Branches / Subjects
+- Edit attendance (loads all students even if attendance rows don’t exist yet)
+- Attendance reports (per-student summary: attended / total / %)
+- Announcements
+- Manage Faculty (create/reset/delete)
+
+### Faculty
+
+- Dashboard with quick actions & stats
+- Mark attendance (subjects + students pulled from DB)
+- Enter marks for a section and save in bulk
+- View Reports
+- Announcements
+- Profile
+
+### Student
+
+- Dashboard with attendance stats
+- View personal attendance history
+- View marks
+- Announcements
+- Profile
+
+---
+
+## Build & Run (Developer Notes)
+
+### Option A — Standalone (recommended for demos)
+
+- `./build-standalone.sh`
+- `java -jar SAS-standalone.jar`
+
+### Option B — Regular build
+
+- `./build.sh`
+- `java -jar SAS.jar`
+
+### Option C — Run with explicit SQLite classpath (legacy)
+
+- `java -cp "SAS.jar:lib/sqlite-jdbc.jar" com.attendance.Main`
+
+---
+
+## Configuration (Optional)
+
+The database connection is managed in:
+
+- `src/com/attendance/util/DBConnection.java`
+
+You can also use environment variables instead of editing code:
+
+- `SAS_DB_URL` — JDBC URL (defaults to SQLite file `absents.db`)
+- `SAS_DB_DRIVER` — optional JDBC driver class
+- `SAS_DB_USER` / `SAS_DB_PASS` — for MySQL connections
+
+---
+
+## Project Structure
 
 ```
-SAS/
-├── src/
-│   └── com/attendance/
-│       ├── Main.java                  # Entry point
-│       ├── dao/                       # Database Access Objects
-│       │   ├── AnnouncementDAO.java
-│       │   ├── AttendanceDAO.java
-│       │   ├── BranchDAO.java
-│       │   ├── FacultyDAO.java
-│       │   ├── MarksDAO.java
-│       │   ├── StudentDAO.java
-│       │   ├── SubjectDAO.java
-│       │   └── UserDAO.java
-│       ├── model/                     # Data Models
-│       │   ├── Announcement.java
-│       │   ├── AttendanceStat.java
-│       │   ├── Branch.java
-│       │   ├── Student.java
-│       │   ├── Subject.java
-│       │   └── User.java
-│       ├── ui/                        # Swing UI Panels
-│       │   ├── LoginFrame.java
-│       │   ├── BaseFrame.java         # Shared sidebar navigation
-│       │   ├── AdminDashboard.java
-│       │   ├── FacultyDashboard.java
-│       │   ├── StudentDashboard.java
-│       │   ├── ProfilePanel.java
-│       │   ├── ReportsPanel.java
-│       │   ├── AddStudentPanel.java
-│       │   ├── ManageStudentsPanel.java
-│       │   ├── ManageAttendancePanel.java
-│       │   └── AnnouncementsPanel.java
-│       └── util/
-│           ├── DBConnection.java      # MySQL connection singleton
-│           ├── PasswordUtil.java      # SHA-256 password hashing
-│           └── UITheme.java           # Professional dark UI theme
-├── lib/
-│   └── mysql-connector-j-8.4.0.jar
-├── database.sql                       # Complete DB schema + seed data
-├── build.sh                           # Build script
-├── run.sh                             # Run script
-└── README.md
+src/
+  com/attendance/
+    Main.java
+    controller/
+    dao/
+      AnnouncementDAO.java
+      AttendanceDAO.java
+      BranchDAO.java
+      FacultyDAO.java
+      MarksDAO.java
+      StudentDAO.java
+      SubjectDAO.java
+      UserDAO.java
+    model/
+    ui/
+      BaseFrame.java
+      LoginFrame.java
+      AdminDashboard.java
+      FacultyDashboard.java
+      StudentDashboard.java
+      ReportsPanel.java
+      EditAttendancePanel.java
+      ManageAttendancePanel.java
+      AnnouncementsPanel.java
+      ProfilePanel.java
+    util/
+      DBConnection.java
+      PasswordUtil.java
+      UITheme.java
+lib/
+  sqlite-jdbc.jar
+  mysql-connector-j-8.4.0.jar
+schema-sqlite.sql
+absents.db
+build.sh
+build-standalone.sh
 ```
 
-## 🎨 Features
-- **Deep Navy & Cyan** professional dark theme
-- **Role-based access**: Admin, Faculty, Student dashboards
-- **Admin**: Manage students, branches, subjects, attendance, reports, announcements
-- **Faculty**: Mark attendance (DB subjects), enter marks (all sections from DB)
-- **Student**: View own attendance stats, marks, announcements
-- **Security**: SHA-256 password hashing, prepared statements (SQL injection safe)
-- **Validation**: Duplicate roll number check, required field validation
-- **Async loading**: SwingWorker for non-blocking DB queries
+---
+
+## Troubleshooting
+
+### App opens the wrong dashboard after login
+
+This means the role value read from the database doesn’t match the expected switch cases.
+
+Check:
+
+- `SELECT username, role FROM users WHERE username='...';`
+
+Valid role values must be exactly:
+
+- `ADMIN`, `FACULTY`, `STUDENT`
+
+### SQLite driver errors
+
+The demo build uses a **fat JAR** that bundles the SQLite driver.
+
+If you are not using the standalone jar, ensure `lib/sqlite-jdbc.jar` exists and is on the classpath.
+
+### UI looks blank / not refreshing
+
+Ensure you are running the latest built jar. Rebuild with:
+
+- `./build-standalone.sh`
+
+---
+
+## Implementation Notes (recent stability/demo improvements)
+
+- **Edit Attendance**: uses a `LEFT JOIN` so all students are shown even if attendance isn’t marked yet.
+- **Reports**: per-student summary matches report headings (attended / total / %).
+- **Packaging**: runnable fat JAR includes JDBC drivers for smooth demos.
+
+---
+
+## Demo Script (2–4 minutes)
+
+Use this as a smooth, presentation-friendly walkthrough.
+
+### 1) Admin flow (setup + reporting)
+
+1. Login as **Admin**.
+2. Open **Admin → Edit Attendance**:
+   - Choose a **Subject** and **Date**.
+   - Confirm **all students load** even if attendance wasn't marked yet.
+   - Mark a few students **PRESENT** and click **Save/Update**.
+3. Open **Admin → Reports**:
+   - Confirm the summary table shows per-student: **Classes Attended / Total / %**.
+
+### 2) Faculty flow (daily operations)
+
+1. Logout and login as **Faculty**.
+2. On the **Faculty Dashboard**, use **Quick Actions**:
+   - **Mark Attendance** (subject/date driven)
+   - **Enter Marks** (load by section, edit marks, save)
+   - **View Reports**
+
+### 3) Student flow (self-service)
+
+1. Logout and login as a **Student**.
+2. Open **Dashboard**:
+   - Confirm attendance stats & subject cards load.
+3. Open **My Attendance** and filter by subject.
+4. Open **My Marks** to view entered marks.
+
+---
+
+## License
+
+For educational/demo use.

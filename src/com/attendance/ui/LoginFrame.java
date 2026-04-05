@@ -24,6 +24,17 @@ public class LoginFrame extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         setContentPane(buildContent());
+
+        // Ensure proper first paint when reopened after logout
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowOpened(java.awt.event.WindowEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    revalidate();
+                    repaint();
+                });
+            }
+        });
     }
 
     private JPanel buildContent() {

@@ -255,6 +255,15 @@ public class EditAttendancePanel extends JPanel {
         Date d = (Date) dateSpinner.getValue();
         String date = new SimpleDateFormat("yyyy-MM-dd").format(d);
 
+        // Lightweight progress dialog to avoid "black/blank" first paint while loading
+        JDialog progress = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Loading...", true);
+        progress.setSize(320, 90);
+        progress.setLocationRelativeTo(this);
+        JPanel pp = new JPanel(new BorderLayout());
+        pp.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+        pp.add(new JLabel("Loading attendance records...", SwingConstants.CENTER), BorderLayout.CENTER);
+        progress.setContentPane(pp);
+
         SwingWorker<List<Map<String, String>>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<Map<String, String>> doInBackground() {
@@ -263,6 +272,7 @@ public class EditAttendancePanel extends JPanel {
 
             @Override
             protected void done() {
+                progress.dispose();
                 try {
                     List<Map<String, String>> records = get();
                     tableModel.setRowCount(0);
@@ -275,6 +285,16 @@ public class EditAttendancePanel extends JPanel {
                                 "No Records", JOptionPane.INFORMATION_MESSAGE);
                     }
                     refreshCounter();
+
+                    // Force UI refresh (prevents occasional first-load blank/black content)
+                    SwingUtilities.invokeLater(() -> {
+                        if (table != null) {
+                            table.revalidate();
+                            table.repaint();
+                        }
+                        revalidate();
+                        repaint();
+                    });
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(EditAttendancePanel.this,
                             "Error loading records: " + ex.getMessage(), "Error",
@@ -283,6 +303,7 @@ public class EditAttendancePanel extends JPanel {
             }
         };
         worker.execute();
+        progress.setVisible(true);
     }
 
     private void saveChanges() {

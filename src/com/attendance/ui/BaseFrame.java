@@ -62,6 +62,38 @@ public abstract class BaseFrame extends JFrame {
         }
     }
 
+    protected void navigateTo(String navItem) {
+        activeNav = navItem;
+        // Rebuild sidebar to update active state
+        sidebarPanel.removeAll();
+        sidebarPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        for (String item : getNavItems()) {
+            sidebarPanel.add(createNavButton(item));
+            sidebarPanel.add(Box.createVerticalStrut(4));
+        }
+        sidebarPanel.add(Box.createVerticalGlue());
+        sidebarPanel.revalidate();
+        sidebarPanel.repaint();
+
+        contentArea.removeAll();
+        JPanel panel = createPanel(navItem);
+        if (panel != null) contentArea.add(panel, BorderLayout.CENTER);
+        contentArea.revalidate();
+        contentArea.repaint();
+
+        // After swapping content panels, force a full-frame repaint to avoid transient black regions
+        SwingUtilities.invokeLater(() -> {
+            if (sidebarPanel != null) {
+                sidebarPanel.revalidate();
+                sidebarPanel.repaint();
+            }
+            contentArea.revalidate();
+            contentArea.repaint();
+            getContentPane().revalidate();
+            getContentPane().repaint();
+        });
+    }
+
     private JPanel buildTopBar() {
         JPanel topBar = new JPanel(new BorderLayout()) {
             @Override protected void paintComponent(Graphics g) {
@@ -75,7 +107,9 @@ public abstract class BaseFrame extends JFrame {
                 g2.dispose();
             }
         };
-        topBar.setOpaque(false);
+        // Important: keep opaque so underlying background never shows as black
+        topBar.setOpaque(true);
+        topBar.setBackground(UITheme.PRIMARY_DARK);
         topBar.setPreferredSize(new Dimension(0, 60));
         topBar.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
@@ -166,7 +200,9 @@ public abstract class BaseFrame extends JFrame {
                 g2.dispose();
             }
         };
-        sidebar.setOpaque(false);
+        // Important: keep opaque to prevent black bleed-through during repaints
+        sidebar.setOpaque(true);
+        sidebar.setBackground(UITheme.SIDEBAR_BG);
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setPreferredSize(new Dimension(220, 0));
         sidebar.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
@@ -211,26 +247,6 @@ public abstract class BaseFrame extends JFrame {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.addActionListener(e -> navigateTo(label));
         return btn;
-    }
-
-    protected void navigateTo(String navItem) {
-        activeNav = navItem;
-        // Rebuild sidebar to update active state
-        sidebarPanel.removeAll();
-        sidebarPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        for (String item : getNavItems()) {
-            sidebarPanel.add(createNavButton(item));
-            sidebarPanel.add(Box.createVerticalStrut(4));
-        }
-        sidebarPanel.add(Box.createVerticalGlue());
-        sidebarPanel.revalidate();
-        sidebarPanel.repaint();
-
-        contentArea.removeAll();
-        JPanel panel = createPanel(navItem);
-        if (panel != null) contentArea.add(panel, BorderLayout.CENTER);
-        contentArea.revalidate();
-        contentArea.repaint();
     }
 
     protected abstract String[] getNavItems();
