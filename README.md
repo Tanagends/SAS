@@ -2,7 +2,6 @@
 
 A full-featured, professional Java Swing desktop application for tracking student attendance, managing marks, and generating reports.
 
-## ✅ All 14 Bugs Fixed
 
 | Task | Issue | Status |
 |------|-------|--------|
