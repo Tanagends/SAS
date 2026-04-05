@@ -188,4 +188,49 @@ public class AttendanceDAO {
         }
         return list;
     }
+
+    /**
+     * Report helper: returns overall attendance summary per student.
+     * Columns provided in each map: roll, name, section, present, total, percentage.
+     * 
+     * Includes students with 0 attendance rows (present=0,total=0,percentage=0.0).
+     */
+    public List<Map<String, Object>> getStudentAttendanceSummary(String section) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        boolean filterSection = (section != null && !section.isBlank() && !section.equals("All Sections"));
+
+        String sql = "SELECT s.roll_no AS roll, s.student_name AS name, s.section AS section, " +
+                "COUNT(a.attendance_id) AS total, " +
+                "SUM(CASE WHEN a.status='PRESENT' THEN 1 ELSE 0 END) AS present " +
+                "FROM students s " +
+                "LEFT JOIN attendance a ON a.student_roll = s.roll_no " +
+                (filterSection ? "WHERE s.section=? " : "") +
+                "GROUP BY s.roll_no, s.student_name, s.section " +
+                "ORDER BY s.roll_no";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (filterSection) {
+                ps.setString(1, section);
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int total = rs.getInt("total");
+                int present = rs.getInt("present");
+                double pct = total > 0 ? (present * 100.0 / total) : 0.0;
+
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("roll", rs.getString("roll"));
+                row.put("name", rs.getString("name"));
+                row.put("section", rs.getString("section"));
+                row.put("present", present);
+                row.put("total", total);
+                row.put("percentage", String.format("%.1f", pct));
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            System.err.println("getStudentAttendanceSummary error: " + e.getMessage());
+        }
+        return list;
+    }
 }

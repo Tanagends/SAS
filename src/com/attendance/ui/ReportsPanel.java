@@ -135,6 +135,7 @@ public class ReportsPanel extends JPanel {
             double overallPct;
             int totalStudents, presentToday;
             List<Map<String, Object>> lowStudents;
+            List<Map<String, Object>> studentSummary;
             List<com.attendance.model.Student> allStudents;
 
             @Override
@@ -144,7 +145,11 @@ public class ReportsPanel extends JPanel {
                 presentToday = attendanceDAO.getTotalPresentToday();
                 int threshold = (Integer) thresholdSpinner.getValue();
                 lowStudents = attendanceDAO.getLowAttendanceStudents(threshold, section);
-                // Always fetch students so Reports clearly "fetches students" for demo
+
+                // NEW: summary for the top table
+                studentSummary = attendanceDAO.getStudentAttendanceSummary(section);
+
+                // Detail table (optional)
                 allStudents = "All Sections".equals(section) ? studentDAO.getAllStudents() : studentDAO.getStudentsBySection(section);
                 return null;
             }
@@ -155,15 +160,16 @@ public class ReportsPanel extends JPanel {
                 totalStudentsLabel.setText(String.valueOf(totalStudents));
                 presentTodayLabel.setText(String.valueOf(presentToday));
 
+                // Top table: fill with attendance summary
                 lowAttendanceModel.setRowCount(0);
-                for (Map<String, Object> row : lowStudents) {
+                for (Map<String, Object> row : studentSummary) {
                     lowAttendanceModel.addRow(new Object[] {
                             row.get("roll"), row.get("name"), row.get("section"),
                             row.get("present"), row.get("total"), row.get("percentage") + "%"
                     });
                 }
 
-                // Populate All Students table
+                // Bottom table: all students
                 if (studentsModel != null) {
                     studentsModel.setRowCount(0);
                     for (var s : allStudents) {
