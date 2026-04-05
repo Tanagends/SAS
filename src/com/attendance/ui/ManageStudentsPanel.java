@@ -133,55 +133,94 @@ public class ManageStudentsPanel extends JPanel {
 
         // Build edit dialog
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Student", true);
+        dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.setSize(420, 300);
         dialog.setLocationRelativeTo(this);
-        dialog.getContentPane().setBackground(UITheme.CARD_BG);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(UITheme.CARD_BG);
-        // Ensure the panel paints its background (avoid transparent regions on some platforms)
-        panel.setOpaque(true);
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Force opaque root/background: some Windows LAF compositions render black when
+        // any ancestor is non-opaque.
+        dialog.setBackground(UITheme.PRIMARY_DARK);
+        dialog.getRootPane().setOpaque(true);
+        dialog.getRootPane().setBackground(UITheme.PRIMARY_DARK);
+        JLayeredPane lp = dialog.getLayeredPane();
+        if (lp != null) {
+            lp.setOpaque(true);
+            lp.setBackground(UITheme.PRIMARY_DARK);
+        }
+
+        // Use a single opaque content panel with BorderLayout
+        JPanel content = new JPanel(new BorderLayout());
+        content.setOpaque(true);
+        content.setBackground(UITheme.PRIMARY_DARK);
+        content.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setOpaque(true);
+        form.setBackground(UITheme.PRIMARY_DARK);
+
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = 0;
+        gc.gridy = 0;
+        gc.anchor = GridBagConstraints.WEST;
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1;
+        gc.insets = new Insets(0, 0, 6, 0);
 
         JLabel rollLbl = UITheme.formLabel("ROLL NO (read-only)");
-        rollLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(rollLbl, gc);
+
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 12, 0);
         JTextField rollField = UITheme.styledTextField();
         rollField.setText(rollNo);
         rollField.setEditable(false);
         rollField.setForeground(UITheme.TEXT_MUTED);
-        rollField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        rollField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(rollField, gc);
 
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 6, 0);
         JLabel nameLbl = UITheme.formLabel("STUDENT NAME");
-        nameLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(nameLbl, gc);
+
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 12, 0);
         JTextField nameField = UITheme.styledTextField();
         nameField.setText(name);
-        nameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        nameField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(nameField, gc);
 
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 6, 0);
         JLabel yearLbl = UITheme.formLabel("YEAR");
-        yearLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(yearLbl, gc);
+
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 12, 0);
         JComboBox<Integer> yearCombo = new JComboBox<>(new Integer[] { 1, 2, 3, 4 });
         yearCombo.setSelectedItem(year);
         UITheme.applyComboStyle(yearCombo);
-        yearCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        yearCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(yearCombo, gc);
 
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 6, 0);
         JLabel secLbl = UITheme.formLabel("SECTION");
-        secLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(secLbl, gc);
+
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 12, 0);
         JTextField sectionField = UITheme.styledTextField();
         sectionField.setText(section);
-        sectionField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        sectionField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(sectionField, gc);
 
+        gc.gridy++;
+        gc.insets = new Insets(6, 0, 8, 0);
         JLabel errLbl = new JLabel(" ");
         errLbl.setFont(UITheme.FONT_SMALL);
         errLbl.setForeground(UITheme.ACCENT_RED);
-        errLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(errLbl, gc);
 
+        gc.gridy++;
+        gc.insets = new Insets(0, 0, 0, 0);
         JButton saveBtn = UITheme.successButton("Save Changes");
-        saveBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         saveBtn.addActionListener(e -> {
             String newName = nameField.getText().trim();
             String newSection = sectionField.getText().trim();
@@ -219,32 +258,15 @@ public class ManageStudentsPanel extends JPanel {
             };
             w.execute();
         });
+        form.add(saveBtn, gc);
 
-        panel.add(rollLbl);
-        panel.add(Box.createVerticalStrut(3));
-        panel.add(rollField);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(nameLbl);
-        panel.add(Box.createVerticalStrut(3));
-        panel.add(nameField);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(yearLbl);
-        panel.add(Box.createVerticalStrut(3));
-        panel.add(yearCombo);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(secLbl);
-        panel.add(Box.createVerticalStrut(3));
-        panel.add(sectionField);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(errLbl);
-        panel.add(Box.createVerticalStrut(8));
-        panel.add(saveBtn);
+        content.add(form, BorderLayout.CENTER);
 
-        dialog.setContentPane(panel);
-        // Make sure the root pane is opaque and has the correct background so the dialog
-        // doesn't show black/transparent areas on some platforms / LAFs.
-        dialog.getRootPane().setBackground(UITheme.CARD_BG);
-        dialog.getRootPane().setOpaque(true);
+        dialog.setContentPane(content);
+        dialog.getContentPane().setBackground(UITheme.PRIMARY_DARK);
+        if (dialog.getContentPane() instanceof JComponent cp) {
+            cp.setOpaque(true);
+        }
         dialog.setVisible(true);
     }
 

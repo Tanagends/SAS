@@ -88,6 +88,16 @@ public class UITheme {
         UIManager.put("ScrollBar.thumb", new Color(50, 80, 140));
         UIManager.put("OptionPane.background", CARD_BG);
         UIManager.put("OptionPane.messageForeground", TEXT_PRIMARY);
+        UIManager.put("OptionPane.foreground", TEXT_PRIMARY);
+        UIManager.put("OptionPane.messageFont", FONT_BODY);
+        UIManager.put("OptionPane.buttonFont", FONT_NAV);
+        UIManager.put("OptionPane.border", BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Ensure dialogs/root panes don't default to black on some LAFs
+        UIManager.put("RootPane.background", PRIMARY_DARK);
+        UIManager.put("RootPane.foreground", TEXT_PRIMARY);
+        UIManager.put("Dialog.background", PRIMARY_DARK);
+        UIManager.put("Dialog.foreground", TEXT_PRIMARY);
     }
 
     // Styled primary button
@@ -106,15 +116,21 @@ public class UITheme {
                 }
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
                 g2.dispose();
+
+                // Paint the label without letting LAF fill a default background
                 super.paintComponent(g);
             }
         };
         btn.setForeground(PRIMARY_DARK);
         btn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        // Critical: prevent BasicButtonUI from painting a black/opaque content area
         btn.setOpaque(false);
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
+        // Also disable rollover fill and set a small margin for consistent sizing
+        btn.setRolloverEnabled(true);
+        btn.setMargin(new Insets(0, 0, 0, 0));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(btn.getPreferredSize().width + 30, 38));
         return btn;
@@ -145,6 +161,8 @@ public class UITheme {
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
+        btn.setRolloverEnabled(true);
+        btn.setMargin(new Insets(0, 0, 0, 0));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(btn.getPreferredSize().width + 30, 38));
         return btn;
@@ -175,6 +193,8 @@ public class UITheme {
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
+        btn.setRolloverEnabled(true);
+        btn.setMargin(new Insets(0, 0, 0, 0));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setPreferredSize(new Dimension(btn.getPreferredSize().width + 30, 38));
         return btn;

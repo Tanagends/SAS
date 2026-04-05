@@ -469,15 +469,15 @@ public class ManageAttendancePanel extends JPanel {
                     JOptionPane.showMessageDialog(ManageAttendancePanel.this,
                             String.format("""
                                     ✅ Attendance submitted for %s on %s
-+
-+                                       Present : %d
-+                                       Absent  : %d
-+                                       Late    : %d
-+                                       Total   : %d  (saved: %d)
-+                                    """,
-+                                    subject.getSubjectName(), date,
-+                                    present, absent, late, tableModel.getRowCount(), saved),
-+                            "Attendance Submitted", JOptionPane.INFORMATION_MESSAGE);
+
+                                       Present : %d
+                                       Absent  : %d
+                                       Late    : %d
+                                       Total   : %d  (saved: %d)
+                                    """,
+                                    subject.getSubjectName(), date,
+                                    present, absent, late, tableModel.getRowCount(), saved),
+                            "Attendance Submitted", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(ManageAttendancePanel.this,
                             "Error saving attendance: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
