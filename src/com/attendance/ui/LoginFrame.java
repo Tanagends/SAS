@@ -287,6 +287,10 @@ public class LoginFrame extends JFrame {
     }
 
     private void launchDashboard(User user) {
+        // DEBUG (demo-safe): confirm role routing if wrong dashboard opens
+        System.out.println("[Login] user=" + (user != null ? user.getUsername() : "null") +
+                " role=" + (user != null ? user.getRole() : "null"));
+
         switch (user.getRole()) {
             case "ADMIN" -> new AdminDashboard(user).setVisible(true);
             case "FACULTY" -> new FacultyDashboard(user).setVisible(true);

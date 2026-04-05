@@ -53,7 +53,12 @@ public abstract class BaseFrame extends JFrame {
         // Load first panel
         String[] navItems = getNavItems();
         if (navItems.length > 0) {
-            navigateTo(navItems[0]);
+            SwingUtilities.invokeLater(() -> {
+                navigateTo(navItems[0]);
+                // Ensure layouts repaint correctly on first show (some LAFs otherwise show stale paint)
+                contentArea.revalidate();
+                contentArea.repaint();
+            });
         }
     }
 

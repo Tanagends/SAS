@@ -27,12 +27,37 @@ public class StudentDashboard extends BaseFrame {
     private String rollNo;
     private String studentName;
 
-    public StudentDashboard(User user) {
-        super(user, "Student Portal");
+    private static class StudentInfo {
+        final String rollNo;
+        final String studentName;
+
+        StudentInfo(String rollNo, String studentName) {
+            this.rollNo = rollNo;
+            this.studentName = studentName;
+        }
+    }
+
+    private static StudentInfo resolveStudentInfo(User user) {
         StudentDAO studentDAO = new StudentDAO();
-        this.rollNo = studentDAO.getRollNumberByUsername(user.getUsername());
-        Student s = rollNo != null ? studentDAO.getStudentByRollNo(rollNo) : null;
-        this.studentName = (s != null ? s.getStudentName() : user.getUsername());
+        String roll = studentDAO.getRollNumberByUsername(user.getUsername());
+        Student s = roll != null ? studentDAO.getStudentByRollNo(roll) : null;
+        String name = (s != null && s.getStudentName() != null && !s.getStudentName().isBlank())
+                ? s.getStudentName()
+                : user.getUsername();
+        return new StudentInfo(roll, name);
+    }
+
+    public StudentDashboard(User user) {
+        // IMPORTANT: BaseFrame immediately loads the first nav panel during its constructor.
+        // So we MUST resolve rollNo before calling super(), otherwise the first Dashboard
+        // render may think profile is missing.
+        this(user, resolveStudentInfo(user));
+    }
+
+    private StudentDashboard(User user, StudentInfo info) {
+        super(user, "Student Portal");
+        this.rollNo = info.rollNo;
+        this.studentName = info.studentName;
     }
 
     @Override

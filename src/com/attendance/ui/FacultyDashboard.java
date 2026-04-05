@@ -12,8 +12,14 @@ import java.util.List;
 // Task 8 & 9: Subjects loaded from database, not hardcoded
 public class FacultyDashboard extends BaseFrame {
 
+    private String facultyName;
+
     public FacultyDashboard(User user) {
         super(user, "Faculty Dashboard");
+        // Use a safe display name (do NOT use StudentDAO/roll mapping for faculty)
+        this.facultyName = (user != null && user.getUsername() != null && !user.getUsername().isBlank())
+                ? user.getUsername()
+                : "Faculty";
     }
 
     @Override
@@ -49,10 +55,27 @@ public class FacultyDashboard extends BaseFrame {
         JPanel panel = new JPanel(new BorderLayout(0, 20));
         panel.setBackground(UITheme.PRIMARY_DARK);
 
-        JLabel title = new JLabel("Faculty Dashboard");
+        // Header (similar to Student header style, but faculty-specific)
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+
+        JLabel title = new JLabel("Welcome, " + facultyName);
         title.setFont(new Font("SansSerif", Font.BOLD, 26));
         title.setForeground(UITheme.TEXT_PRIMARY);
-        panel.add(title, BorderLayout.NORTH);
+
+        JLabel subtitle = new JLabel("Faculty Dashboard");
+        subtitle.setFont(UITheme.FONT_SMALL);
+        subtitle.setForeground(UITheme.TEXT_SECONDARY);
+
+        JPanel titleBox = new JPanel();
+        titleBox.setOpaque(false);
+        titleBox.setLayout(new BoxLayout(titleBox, BoxLayout.Y_AXIS));
+        titleBox.add(title);
+        titleBox.add(Box.createVerticalStrut(4));
+        titleBox.add(subtitle);
+
+        header.add(titleBox, BorderLayout.WEST);
+        panel.add(header, BorderLayout.NORTH);
 
         JPanel statsRow = new JPanel(new GridLayout(1, 3, 15, 0));
         statsRow.setBackground(UITheme.PRIMARY_DARK);
@@ -67,21 +90,44 @@ public class FacultyDashboard extends BaseFrame {
         buildStat(statsRow, "Subjects", String.valueOf(subd.getAllSubjects().size()), UITheme.ACCENT_ORANGE);
 
         JPanel quickActions = UITheme.cardPanel("Quick Actions");
-        quickActions.setLayout(new GridLayout(3, 1, 0, 10));
-        String[] actions = { "Mark Attendance", "Enter Marks", "View Reports" };
-        for (String action : actions) {
-            JButton btn = UITheme.primaryButton(action);
-            btn.addActionListener(e -> navigateTo(
-                    java.util.Arrays.stream(getNavItems()).filter(n -> n.contains(action)).findFirst().orElse("")));
-            quickActions.add(btn);
-        }
+        quickActions.setLayout(new GridLayout(5, 1, 0, 10));
+
+        JButton markBtn = UITheme.primaryButton("Mark Attendance");
+        markBtn.addActionListener(e -> navigateTo(findNav("Mark Attendance")));
+
+        JButton marksBtn = UITheme.primaryButton("Enter Marks");
+        marksBtn.addActionListener(e -> navigateTo(findNav("Enter Marks")));
+
+        JButton reportsBtn = UITheme.primaryButton("View Reports");
+        reportsBtn.addActionListener(e -> navigateTo(findNav("View Reports")));
+
+        JButton annBtn = UITheme.primaryButton("Announcements");
+        annBtn.addActionListener(e -> navigateTo(findNav("Announcements")));
+
+        JButton profileBtn = UITheme.makeSecondaryButton("Profile");
+        profileBtn.addActionListener(e -> navigateTo(findNav("Profile")));
+
+        quickActions.add(markBtn);
+        quickActions.add(marksBtn);
+        quickActions.add(reportsBtn);
+        quickActions.add(annBtn);
+        quickActions.add(profileBtn);
 
         JPanel center = new JPanel(new BorderLayout(0, 15));
         center.setBackground(UITheme.PRIMARY_DARK);
         center.add(statsRow, BorderLayout.NORTH);
         center.add(quickActions, BorderLayout.CENTER);
+
         panel.add(center, BorderLayout.CENTER);
         return panel;
+    }
+
+    private String findNav(String contains) {
+        for (String n : getNavItems()) {
+            if (n != null && n.contains(contains))
+                return n;
+        }
+        return "";
     }
 
     private void buildStat(JPanel parent, String title, String value, Color color) {
