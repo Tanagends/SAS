@@ -86,9 +86,18 @@ public class AttendanceDAO {
 
     public List<Map<String, String>> getAttendanceBySubjectAndDate(String subject, String date) {
         List<Map<String, String>> records = new ArrayList<>();
-        String sql = "SELECT a.student_roll, s.student_name, a.status FROM attendance a " +
-                "JOIN students s ON a.student_roll=s.roll_no " +
-                "WHERE a.subject=? AND a.date=? ORDER BY s.roll_no";
+
+        // CRITICAL DEMO FIX:
+        // The old query only returned rows that ALREADY exist in `attendance`.
+        // If attendance hasn't been marked for this subject+date yet, UI shows an empty table.
+        // For Edit Attendance we must always show all students, with a default status.
+        String sql = "SELECT s.roll_no AS student_roll, s.student_name, " +
+                "COALESCE(a.status, 'ABSENT') AS status " +
+                "FROM students s " +
+                "LEFT JOIN attendance a " +
+                "  ON a.student_roll = s.roll_no AND a.subject = ? AND a.date = ? " +
+                "ORDER BY s.roll_no";
+
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, subject);
